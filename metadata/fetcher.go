@@ -1,4 +1,4 @@
-package fetcher
+package metadata
 
 import (
 	"context"
@@ -24,7 +24,7 @@ type Fetcher struct {
 	url *url.URL
 }
 
-func New(urlStr string) (*Fetcher, error) {
+func NewFetcher(urlStr string) (*Fetcher, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse the url: %w", err)

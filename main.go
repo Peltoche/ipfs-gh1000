@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Peltoche/ipfs-gh1000/fetcher"
+	"github.com/Peltoche/ipfs-gh1000/metadata"
 )
 
 func main() {
-	fetcher, err := fetcher.New("https://gitstar-ranking.com/repositories")
+	fetcher, err := metadata.NewFetcher("https://gitstar-ranking.com/repositories")
 	if err != nil {
 		log.Fatalf("failed to create the fetcher: %s", err)
 	}
