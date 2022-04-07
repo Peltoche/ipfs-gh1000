@@ -14,7 +14,7 @@ import (
 )
 
 type RepoMetadata struct {
-	RepositoryURL     string
+	RepositoryURL     *url.URL
 	Rank              int
 	NbStars           int
 	LastMetadataFetch time.Time
@@ -97,8 +97,13 @@ func (f *Fetcher) FetchMetadataForLink(ctx context.Context, link string) (*RepoM
 		return nil, fmt.Errorf("failed to parse the last update date: %w", err)
 	}
 
+	repoURL, err := url.Parse("https://github.com" + link)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse the repo url: %w", err)
+	}
+
 	return &RepoMetadata{
-		RepositoryURL:     "https://github.com" + link,
+		RepositoryURL:     repoURL,
 		Rank:              rank,
 		NbStars:           stars,
 		LastMetadataFetch: lastUpdateDate,
