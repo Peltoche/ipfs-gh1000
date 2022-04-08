@@ -9,6 +9,8 @@ import (
 
 	"github.com/Peltoche/ipfs-gh1000/git"
 	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 )
 
 func main() {
@@ -20,18 +22,22 @@ func main() {
 	} */
 
 	memFS := memfs.New()
+	storage := filesystem.NewStorage(memFS, cache.NewObjectLRUDefault())
 
-	gitFetcher := git.NewFetcher("./repositories")
+	unpacker := git.NewUnpacker()
+	gitFetcher := git.NewFetcher()
 
 	repoURL, _ := url.Parse("https://github.com/Peltoche/ipfs-gh1000")
-	// repoURL, _ := url.Parse("https://github.com/996icu/996.ICU")
 
-	CID, err := gitFetcher.CloneRepository(ctx, repoURL, memFS)
+	err := gitFetcher.CloneRepositoryInto(ctx, repoURL, storage)
 	if err != nil {
 		log.Fatalf("failed to clone the repository: %s", err)
 	}
 
-	fmt.Printf("CID: %s\n", CID)
+	err = unpacker.Unpack(storage)
+	if err != nil {
+		log.Fatalf("failed to unpack the repository: %s", err)
+	}
 
 	entries, _ := memFS.ReadDir("/objects")
 	for _, entry := range entries {
