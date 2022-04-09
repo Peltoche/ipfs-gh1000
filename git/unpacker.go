@@ -3,6 +3,7 @@ package git
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"time"
@@ -67,18 +68,18 @@ func (u *Unpacker) Unpack(storage billy.Filesystem) error {
 				return fmt.Errorf("failed to retrieve writer for object %q: %w", obj.Hash(), err)
 			}
 
-			buf := make([]byte, obj.Size())
-			n, err := objReader.Read(buf)
+			buf, err := ioutil.ReadAll(objReader)
 			if err != nil {
 				return fmt.Errorf("failed to write the object %q inside a buffer: %w", obj.Hash(), err)
 			}
+
 			err = objReader.Close()
 			if err != nil {
 				return fmt.Errorf("failed to close the object: %w", err)
 			}
 
-			if int64(n) != obj.Size() {
-				return fmt.Errorf("the buffer is not completly full after receiving the data from object %q (%d != %d)", obj.Hash(), n, obj.Size())
+			if int64(len(buf)) != obj.Size() {
+				return fmt.Errorf("the buffer is not completly full after receiving the data from object %q (%d != %d)", obj.Hash(), len(buf), obj.Size())
 			}
 
 			writer.Write(buf)
@@ -90,7 +91,7 @@ func (u *Unpacker) Unpack(storage billy.Filesystem) error {
 			return nil
 		})
 		if err != nil {
-			return fmt.Errorf("failed to unpach the objects: %w", err)
+			return fmt.Errorf("failed to unpack the objects: %w", err)
 		}
 
 		err = dir.DeleteOldObjectPackAndIndex(packHash, time.Time{})

@@ -27,7 +27,7 @@ func main() {
 	gitFetcher := git.NewFetcher()
 	infoUpdater := git.NewServerInfoUpdater()
 
-	repoURL, _ := url.Parse("https://github.com/Peltoche/ipfs-gh1000")
+	repoURL, _ := url.Parse("https://github.com/vuejs/vue")
 
 	err := gitFetcher.CloneRepositoryInto(ctx, repoURL, storage)
 	if err != nil {
