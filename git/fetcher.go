@@ -36,8 +36,15 @@ func (f *Fetcher) CloneRepositoryInto(ctx context.Context, repoURL *url.URL, sto
 	}
 
 	err = repo.FetchContext(ctx, &git.FetchOptions{
-		RemoteName: "origin",
-		Progress:   os.Stdout,
+		RemoteName:      "origin",
+		RefSpecs:        []config.RefSpec{},
+		Depth:           0,
+		Auth:            nil,
+		Progress:        os.Stdout,
+		Tags:            0,
+		Force:           false,
+		InsecureSkipTLS: false,
+		CABundle:        []byte{},
 	})
 	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
 		return fmt.Errorf("failed to pull the latest changes: %w", err)

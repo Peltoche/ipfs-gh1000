@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/url"
-	"path"
 
 	"github.com/Peltoche/ipfs-gh1000/git"
 	"github.com/go-git/go-billy/v5/osfs"
@@ -22,12 +20,12 @@ func main() {
 	} */
 
 	// memFS := memfs.New()
-	// memFS := memfs.New()
 	memFS := osfs.New("/tmp/foobar")
 	storage := filesystem.NewStorage(memFS, cache.NewObjectLRUDefault())
 
 	unpacker := git.NewUnpacker()
 	gitFetcher := git.NewFetcher()
+	infoUpdater := git.NewServerInfoUpdater()
 
 	repoURL, _ := url.Parse("https://github.com/Peltoche/ipfs-gh1000")
 
@@ -41,17 +39,8 @@ func main() {
 		log.Fatalf("failed to unpack the repository: %s", err)
 	}
 
-	entries, _ := memFS.ReadDir("/objects")
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			fmt.Printf("file: %v %s\n", entry.IsDir(), entry.Name())
-			continue
-		}
-
-		entries2, _ := memFS.ReadDir(path.Join("/objects", entry.Name()))
-		for _, entry2 := range entries2 {
-			fmt.Printf("file: %v %s\n", entry.IsDir(), path.Join("/objects", entry.Name(), entry2.Name()))
-		}
-
+	err = infoUpdater.UpdateServerInfo(storage)
+	if err != nil {
+		log.Fatalf("failed to update the server infos: %s", err)
 	}
 }
