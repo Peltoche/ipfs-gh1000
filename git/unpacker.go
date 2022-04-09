@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -88,12 +89,15 @@ func (u *Unpacker) Unpack(storage billy.Filesystem) error {
 
 			return nil
 		})
-	}
-	if err != nil {
-		return fmt.Errorf("failed to unpach the objects: %w", err)
-	}
+		if err != nil {
+			return fmt.Errorf("failed to unpach the objects: %w", err)
+		}
 
-	// TODO delete the packfile and the idx
+		err = dir.DeleteOldObjectPackAndIndex(packHash, time.Time{})
+		if err != nil {
+			return fmt.Errorf("failed to delete the packfile %q and the corresponding index: %w", packHash, err)
+		}
+	}
 
 	return nil
 }
