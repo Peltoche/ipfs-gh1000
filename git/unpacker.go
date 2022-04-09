@@ -8,8 +8,10 @@ import (
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/format/idxfile"
 	"github.com/go-git/go-git/v5/plumbing/format/objfile"
-	"github.com/go-git/go-git/v5/storage/filesystem"
+	"github.com/go-git/go-git/v5/plumbing/format/packfile"
+	"github.com/go-git/go-git/v5/storage/filesystem/dotgit"
 )
 
 type Unpacker struct {
@@ -19,51 +21,79 @@ func NewUnpacker() *Unpacker {
 	return &Unpacker{}
 }
 
-func (u *Unpacker) Unpack(storage *filesystem.Storage) error {
-	objs, err := storage.IterEncodedObjects(plumbing.AnyObject)
+func (u *Unpacker) Unpack(storage billy.Filesystem) error {
+	dir := dotgit.New(storage)
+
+	packsHashs, err := dir.ObjectPacks()
 	if err != nil {
-		return fmt.Errorf("failed to create an iterator for the encoded objects: %w", err)
+		return fmt.Errorf("failed to retrieve the pack hashs: %w", err)
 	}
 
-	err = objs.ForEach(func(obj plumbing.EncodedObject) error {
-		file, err := u.createObjectFileForHash(storage.Filesystem(), obj.Hash())
+	for _, packHash := range packsHashs {
+		packFil, err := dir.ObjectPack(packHash)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve the packfile %q: %w", packHash, err)
 		}
 
-		writer := objfile.NewWriter(file)
-		writer.WriteHeader(obj.Type(), obj.Size())
-
-		objReader, err := obj.Reader()
+		idxFile, err := dir.ObjectPackIdx(packHash)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve writer for object %q: %w", obj.Hash(), err)
+			return fmt.Errorf("failed to retrieve the idx file for pack %q: %w", packHash, err)
 		}
 
-		buf := make([]byte, obj.Size())
-		n, err := objReader.Read(buf)
+		idx := idxfile.NewMemoryIndex()
+		err = idxfile.NewDecoder(idxFile).Decode(idx)
 		if err != nil {
-			return fmt.Errorf("failed to write the object %q inside a buffer: %w", obj.Hash(), err)
+			return fmt.Errorf("failed to decode the idx file for pack %q: %w", packHash, err)
 		}
-		err = objReader.Close()
+
+		pack := packfile.NewPackfile(idx, nil, packFil)
+		objs, err := pack.GetAll()
 		if err != nil {
-			return fmt.Errorf("failed to close the object: %w", err)
+			return fmt.Errorf("failed to fetch all objects from pack %q: %w", packHash, err)
 		}
 
-		if int64(n) != obj.Size() {
-			return fmt.Errorf("the buffer is not completly full after receiving the data from object %q (%d != %d)", obj.Hash(), n, obj.Size())
-		}
+		err = objs.ForEach(func(obj plumbing.EncodedObject) error {
+			file, err := u.createObjectFileForHash(storage, obj.Hash())
+			if err != nil {
+				return err
+			}
 
-		writer.Write(buf)
-		err = writer.Close()
-		if err != nil {
-			return fmt.Errorf("failed to close the object writer: %w", err)
-		}
+			writer := objfile.NewWriter(file)
+			writer.WriteHeader(obj.Type(), obj.Size())
 
-		return nil
-	})
+			objReader, err := obj.Reader()
+			if err != nil {
+				return fmt.Errorf("failed to retrieve writer for object %q: %w", obj.Hash(), err)
+			}
+
+			buf := make([]byte, obj.Size())
+			n, err := objReader.Read(buf)
+			if err != nil {
+				return fmt.Errorf("failed to write the object %q inside a buffer: %w", obj.Hash(), err)
+			}
+			err = objReader.Close()
+			if err != nil {
+				return fmt.Errorf("failed to close the object: %w", err)
+			}
+
+			if int64(n) != obj.Size() {
+				return fmt.Errorf("the buffer is not completly full after receiving the data from object %q (%d != %d)", obj.Hash(), n, obj.Size())
+			}
+
+			writer.Write(buf)
+			err = writer.Close()
+			if err != nil {
+				return fmt.Errorf("failed to close the object writer: %w", err)
+			}
+
+			return nil
+		})
+	}
 	if err != nil {
 		return fmt.Errorf("failed to unpach the objects: %w", err)
 	}
+
+	// TODO delete the packfile and the idx
 
 	return nil
 }
