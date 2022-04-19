@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
-	"os"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -40,7 +40,7 @@ func (f *Fetcher) CloneRepositoryInto(ctx context.Context, repoURL *url.URL, sto
 		RefSpecs:        []config.RefSpec{},
 		Depth:           0,
 		Auth:            nil,
-		Progress:        os.Stdout,
+		Progress:        io.Discard,
 		Tags:            0,
 		Force:           false,
 		InsecureSkipTLS: false,
