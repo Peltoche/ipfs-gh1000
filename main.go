@@ -1,56 +1,26 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/url"
 
 	"github.com/Peltoche/ipfs-gh1000/git"
 	"github.com/Peltoche/ipfs-gh1000/ipfs"
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/v5/plumbing/cache"
-	"github.com/go-git/go-git/v5/storage/filesystem"
+	"github.com/Peltoche/ipfs-gh1000/metadata"
 )
 
 func main() {
-	ctx := context.Background()
-
-	/* metaFetcher, err := metadata.NewFetcher("https://gitstar-ranking.com/repositories")
+	metaFetcher, err := metadata.NewFetcher("https:gitstar-ranking.com/repositories")
 	if err != nil {
 		log.Fatalf("failed to create the fetcher: %s", err)
-	} */
-
-	// fs := osfs.New("/tmp/git")
-	fs := memfs.New()
-
-	storage := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
+	}
 
 	unpacker := git.NewUnpacker()
 	gitFetcher := git.NewFetcher()
 	infoUpdater := git.NewServerInfoUpdater()
 	ipfsUploader := ipfs.NewUploader()
 
-	repoURL, _ := url.Parse("https://github.com/Peltoche/ipfs-gh1000")
-
-	err := gitFetcher.CloneRepositoryInto(ctx, repoURL, storage)
+	err = Run(metaFetcher, gitFetcher, unpacker, infoUpdater, ipfsUploader)
 	if err != nil {
-		log.Fatalf("failed to clone the repository: %s", err)
+		log.Fatal(err)
 	}
-
-	err = unpacker.Unpack(storage.Filesystem())
-	if err != nil {
-		log.Fatalf("failed to unpack the repository: %s", err)
-	}
-
-	err = infoUpdater.UpdateServerInfo(storage)
-	if err != nil {
-		log.Fatalf("failed to update the server infos: %s", err)
-	}
-
-	hash, err := ipfsUploader.UploadRepo(ctx, fs)
-	if err != nil {
-		log.Fatalf("failed to upload the repo %q into ipfs: %s", repoURL, err)
-	}
-
-	log.Printf("hash: %s", hash)
 }
