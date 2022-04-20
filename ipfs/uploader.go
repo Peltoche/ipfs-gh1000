@@ -39,7 +39,6 @@ func (u *Uploader) UploadRepo(ctx context.Context, fs billy.Filesystem) (string,
 
 	resp, err := u.shell.Request("add").
 		Option("recursive", true).
-		Option("pin", true).
 		Body(reader).
 		Send(ctx)
 	if err != nil {
