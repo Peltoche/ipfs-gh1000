@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/Peltoche/ipfs-gh1000/git"
 	"github.com/Peltoche/ipfs-gh1000/ipfs"
@@ -30,23 +32,24 @@ func Run(
 		log.Fatalf("failed to fetch the first page: %s", err)
 	}
 
-	repoMetadataList := make([]metadata.RepoMetadata, len(links))
+	src := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(src)
+	for i := range links {
+		n := r.Intn(len(links) - 1)
+		links[i], links[n] = links[n], links[i]
+	}
 
-	for i, link := range links {
+	for _, link := range links {
 		log.Printf("fetch metadata for %s", link)
 		meta, err := metaFetcher.FetchMetadataForLink(ctx, link)
 		if err != nil {
 			log.Fatalf("failed to fetch the metadatas for %s: %s", link, err)
 		}
 
-		repoMetadataList[i] = *meta
-	}
-
-	for _, repo := range repoMetadataList {
-		log.Printf("start converting the repo %s", repo.RepositoryURL)
+		log.Printf("start converting the repo %s", meta.RepositoryURL)
 
 		log.Printf("start pulling repository...")
-		err = gitFetcher.CloneRepositoryInto(ctx, repo.RepositoryURL, storage)
+		err = gitFetcher.CloneRepositoryInto(ctx, meta.RepositoryURL, storage)
 		if err != nil {
 			log.Fatalf("failed to clone the repository: %s", err)
 		}
@@ -69,7 +72,7 @@ func Run(
 		log.Println("start ipfs uploading")
 		hash, err := ipfsUploader.UploadRepo(ctx, fs)
 		if err != nil {
-			log.Fatalf("failed to upload the repo %q into ipfs: %s", repo.RepositoryURL, err)
+			log.Fatalf("failed to upload the repo %q into ipfs: %s", meta.RepositoryURL, err)
 		}
 		log.Printf("ifps uploading successfull: %q", hash)
 	}
