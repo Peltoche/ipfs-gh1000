@@ -23,9 +23,6 @@ func Run(
 ) error {
 	ctx := context.Background()
 
-	fs := memfs.New()
-	storage := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
-
 	log.Printf("fetch first page")
 	links, err := metaFetcher.FetchLinkPage(ctx)
 	if err != nil {
@@ -40,6 +37,9 @@ func Run(
 	}
 
 	for _, link := range links {
+		fs := memfs.New()
+		storage := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
+
 		log.Printf("fetch metadata for %s", link)
 		meta, err := metaFetcher.FetchMetadataForLink(ctx, link)
 		if err != nil {
