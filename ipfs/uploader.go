@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/go-git/go-billy/v5"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -15,10 +16,8 @@ type Uploader struct {
 	shell *shell.Shell
 }
 
-func NewUploader() *Uploader {
-	return &Uploader{
-		shell: shell.NewLocalShell(),
-	}
+func NewUploader(shell *shell.Shell) *Uploader {
+	return &Uploader{shell}
 }
 
 func (u *Uploader) UploadRepo(ctx context.Context, fs billy.Filesystem) (string, error) {
@@ -65,6 +64,12 @@ func (u *Uploader) UploadRepo(ctx context.Context, fs billy.Filesystem) (string,
 			return "", err
 		}
 		final = out.Hash
+	}
+
+	log.Printf("pin the repository: %s", final)
+	err = u.shell.Pin(final)
+	if err != nil {
+		return "", fmt.Errorf("failed to pin the repo: %w", err)
 	}
 
 	return final, nil

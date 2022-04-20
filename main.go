@@ -6,6 +6,7 @@ import (
 	"github.com/Peltoche/ipfs-gh1000/git"
 	"github.com/Peltoche/ipfs-gh1000/ipfs"
 	"github.com/Peltoche/ipfs-gh1000/metadata"
+	shell "github.com/ipfs/go-ipfs-api"
 )
 
 func main() {
@@ -14,10 +15,11 @@ func main() {
 		log.Fatalf("failed to create the fetcher: %s", err)
 	}
 
+	shell := shell.NewLocalShell()
 	unpacker := git.NewUnpacker()
 	gitFetcher := git.NewFetcher()
 	infoUpdater := git.NewServerInfoUpdater()
-	ipfsUploader := ipfs.NewUploader()
+	ipfsUploader := ipfs.NewUploader(shell)
 
 	err = Run(metaFetcher, gitFetcher, unpacker, infoUpdater, ipfsUploader)
 	if err != nil {
