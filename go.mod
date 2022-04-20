@@ -6,8 +6,10 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/ipfs/go-cid v0.1.0
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/ipfs/go-ipfs-files v0.0.9
+	github.com/ipld/go-ipld-prime v0.16.0
 	go.uber.org/multierr v1.8.0
 )
 
@@ -21,13 +23,10 @@ require (
 	github.com/emirpasic/gods v1.12.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/ipfs/go-cid v0.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
 	github.com/libp2p/go-flow-metrics v0.0.3 // indirect
 	github.com/libp2p/go-libp2p-core v0.11.0 // indirect
@@ -42,6 +41,7 @@ require (
 	github.com/multiformats/go-multibase v0.0.3 // indirect
 	github.com/multiformats/go-multihash v0.1.0 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
+	github.com/polydawn/refmt v0.0.0-20201211092308-30ac6d18308e // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -52,6 +52,5 @@ require (
 	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b // indirect
 	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	lukechampine.com/blake3 v1.1.6 // indirect
 )

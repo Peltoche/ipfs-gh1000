@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/go-git/go-billy/v5"
+	cid "github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	files "github.com/ipfs/go-ipfs-files"
 )
@@ -20,17 +21,17 @@ func NewUploader(shell *shell.Shell) *Uploader {
 	return &Uploader{shell}
 }
 
-func (u *Uploader) UploadRepo(ctx context.Context, fs billy.Filesystem) (string, error) {
+func (u *Uploader) UploadRepo(ctx context.Context, fs billy.Filesystem) (*cid.Cid, error) {
 	root := "/"
 
 	stat, err := fs.Stat(root)
 	if err != nil {
-		return "", fmt.Errorf("failed to retrieve root stats: %w", err)
+		return nil, fmt.Errorf("failed to retrieve root stats: %w", err)
 	}
 
 	node, err := NewSerialFile(root, fs, stat)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	rootDir := files.NewSliceDirectory([]files.DirEntry{files.FileEntry("/", node)})
@@ -41,19 +42,19 @@ func (u *Uploader) UploadRepo(ctx context.Context, fs billy.Filesystem) (string,
 		Body(reader).
 		Send(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to save the data into ipfs: %w", err)
+		return nil, fmt.Errorf("failed to save the data into ipfs: %w", err)
 	}
 	defer resp.Close()
 
 	if resp.Error != nil {
-		return "", resp.Error
+		return nil, resp.Error
 	}
 
 	dec := json.NewDecoder(resp.Output)
 	type object struct {
-		Hash string
+		Hash cid.Cid
 	}
-	var final string
+	var final cid.Cid
 	for {
 		var out object
 		err = dec.Decode(&out)
@@ -61,16 +62,16 @@ func (u *Uploader) UploadRepo(ctx context.Context, fs billy.Filesystem) (string,
 			if err == io.EOF {
 				break
 			}
-			return "", err
+			return nil, err
 		}
 		final = out.Hash
 	}
 
 	log.Printf("pin the repository: %s", final)
-	err = u.shell.Pin(final)
+	err = u.shell.Pin(final.String())
 	if err != nil {
-		return "", fmt.Errorf("failed to pin the repo: %w", err)
+		return nil, fmt.Errorf("failed to pin the repo: %w", err)
 	}
 
-	return final, nil
+	return &final, nil
 }

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/ipfs/go-cid"
 	"go.uber.org/multierr"
 )
 
@@ -18,7 +19,7 @@ type RepoMetadata struct {
 	Rank              int
 	NbStars           int
 	LastMetadataFetch time.Time
-	RepoCID           string
+	Repo              *cid.Cid
 }
 
 type Fetcher struct {
@@ -61,6 +62,8 @@ func (f *Fetcher) FetchLinkPage(ctx context.Context) ([]string, error) {
 			return
 		}
 
+		link = strings.TrimPrefix(link, "/")
+
 		links = append(links, link)
 	})
 
@@ -98,7 +101,7 @@ func (f *Fetcher) FetchMetadataForLink(ctx context.Context, link string) (*RepoM
 		return nil, fmt.Errorf("failed to parse the last update date: %w", err)
 	}
 
-	repoURL, err := url.Parse("https://github.com" + link)
+	repoURL, err := url.Parse("https://github.com/" + link)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse the repo url: %w", err)
 	}
@@ -108,7 +111,7 @@ func (f *Fetcher) FetchMetadataForLink(ctx context.Context, link string) (*RepoM
 		Rank:              rank,
 		NbStars:           stars,
 		LastMetadataFetch: lastUpdateDate,
-		RepoCID:           "",
+		Repo:              nil,
 	}, nil
 }
 

@@ -30,9 +30,10 @@ func Run(
 		log.Fatalf("failed to fetch the first page: %s", err)
 	}
 
-	index := map[string]metadata.RepoMetadata{}
-
-	indexer.SaveIndex(ctx, index)
+	err = indexer.SaveIndex(ctx, map[string]metadata.RepoMetadata{})
+	if err != nil {
+		panic(err)
+	}
 
 	src := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(src)
@@ -81,8 +82,7 @@ func Run(
 		}
 		log.Printf("ifps uploading successfull: %q", repoCID)
 
-		repoCID := "some-cid"
-		meta.RepoCID = repoCID
+		meta.Repo = repoCID
 
 		log.Println("start updating the index")
 		index, err := indexer.RetrieveIndex(ctx)
