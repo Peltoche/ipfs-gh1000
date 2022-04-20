@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	metaFetcher, err := metadata.NewFetcher("https:gitstar-ranking.com/repositories")
+	metaFetcher, err := metadata.NewFetcher("https://gitstar-ranking.com/repositories")
 	if err != nil {
 		log.Fatalf("failed to create the fetcher: %s", err)
 	}
