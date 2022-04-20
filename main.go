@@ -21,7 +21,12 @@ func main() {
 	infoUpdater := git.NewServerInfoUpdater()
 	ipfsUploader := ipfs.NewUploader(shell)
 
-	err = Run(metaFetcher, gitFetcher, unpacker, infoUpdater, ipfsUploader)
+	ipfsIndexer, err := ipfs.NewIndexer(shell, "gh1000")
+	if err != nil {
+		log.Fatalf("failed to initiate the indexer: %s", err)
+	}
+
+	err = Run(metaFetcher, gitFetcher, unpacker, infoUpdater, ipfsUploader, ipfsIndexer)
 	if err != nil {
 		log.Fatal(err)
 	}

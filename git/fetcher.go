@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -20,7 +19,7 @@ func NewFetcher() *Fetcher {
 	return &Fetcher{}
 }
 
-func (f *Fetcher) CloneRepositoryInto(ctx context.Context, repoURL *url.URL, storage *filesystem.Storage) error {
+func (f *Fetcher) CloneRepositoryInto(ctx context.Context, repoURL string, storage *filesystem.Storage) error {
 	repo, err := git.Init(storage, nil)
 	if err != nil {
 		return fmt.Errorf("failed to init the new repository: %w", err)
@@ -28,7 +27,7 @@ func (f *Fetcher) CloneRepositoryInto(ctx context.Context, repoURL *url.URL, sto
 
 	_, err = repo.CreateRemote(&config.RemoteConfig{
 		Name:  "origin",
-		URLs:  []string{repoURL.String()},
+		URLs:  []string{repoURL},
 		Fetch: []config.RefSpec{},
 	})
 	if err != nil {

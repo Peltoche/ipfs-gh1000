@@ -14,10 +14,11 @@ import (
 )
 
 type RepoMetadata struct {
-	RepositoryURL     *url.URL
+	RepositoryURL     string
 	Rank              int
 	NbStars           int
 	LastMetadataFetch time.Time
+	RepoCID           string
 }
 
 type Fetcher struct {
@@ -103,10 +104,11 @@ func (f *Fetcher) FetchMetadataForLink(ctx context.Context, link string) (*RepoM
 	}
 
 	return &RepoMetadata{
-		RepositoryURL:     repoURL,
+		RepositoryURL:     repoURL.String(),
 		Rank:              rank,
 		NbStars:           stars,
 		LastMetadataFetch: lastUpdateDate,
+		RepoCID:           "",
 	}, nil
 }
 

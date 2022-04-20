@@ -9,9 +9,9 @@ import (
 	"github.com/Peltoche/ipfs-gh1000/git"
 	"github.com/Peltoche/ipfs-gh1000/ipfs"
 	"github.com/Peltoche/ipfs-gh1000/metadata"
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/v5/plumbing/cache"
-	"github.com/go-git/go-git/v5/storage/filesystem"
+	"github.com/go-git/go-billy/memfs"
+	"github.com/go-git/go-git/plumbing/cache"
+	"github.com/go-git/go-git/storage/filesystem"
 )
 
 func Run(
@@ -20,6 +20,7 @@ func Run(
 	unpacker *git.Unpacker,
 	infoUpdater *git.ServerInfoUpdater,
 	ipfsUploader *ipfs.Uploader,
+	indexer *ipfs.Indexer,
 ) error {
 	ctx := context.Background()
 
@@ -28,6 +29,10 @@ func Run(
 	if err != nil {
 		log.Fatalf("failed to fetch the first page: %s", err)
 	}
+
+	index := map[string]metadata.RepoMetadata{}
+
+	indexer.SaveIndex(ctx, index)
 
 	src := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(src)
@@ -70,11 +75,27 @@ func Run(
 		log.Println("server info updating successfull")
 
 		log.Println("start ipfs uploading")
-		hash, err := ipfsUploader.UploadRepo(ctx, fs)
+		repoCID, err := ipfsUploader.UploadRepo(ctx, fs)
 		if err != nil {
 			log.Fatalf("failed to upload the repo %q into ipfs: %s", meta.RepositoryURL, err)
 		}
-		log.Printf("ifps uploading successfull: %q", hash)
+		log.Printf("ifps uploading successfull: %q", repoCID)
+
+		repoCID := "some-cid"
+		meta.RepoCID = repoCID
+
+		log.Println("start updating the index")
+		index, err := indexer.RetrieveIndex(ctx)
+		if err != nil {
+			log.Fatalf("failed to retrieve the index: %s", err)
+		}
+
+		index[link] = *meta
+
+		err = indexer.SaveIndex(ctx, index)
+		if err != nil {
+			log.Fatalf("failed to save the new index: %s", err)
+		}
 	}
 
 	return nil
