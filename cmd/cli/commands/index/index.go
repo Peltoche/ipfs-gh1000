@@ -7,5 +7,6 @@ import (
 func IndexCmd() cli.Command {
 	return cli.NewCommand("index",
 		"Manipulate the index").
-		WithCommand(PurgeCmd())
+		WithCommand(PurgeCmd()).
+		WithCommand(CatCmd())
 }

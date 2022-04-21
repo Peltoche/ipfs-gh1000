@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -131,29 +132,10 @@ func (i *Indexer) RetrieveIndex(ctx context.Context) (map[string]metadata.RepoMe
 }
 
 func (i *Indexer) SaveIndex(ctx context.Context, index map[string]metadata.RepoMetadata) error {
-
-	n, err := qp.BuildMap(basicnode.Prototype.Any, int64(len(index)), func(ma datamodel.MapAssembler) {
-		for name, data := range index {
-			log.Printf("index: %s", name)
-			qp.MapEntry(ma, name, qp.Map(5, func(ma datamodel.MapAssembler) {
-				qp.MapEntry(ma, "url", qp.String(data.RepositoryURL))
-				qp.MapEntry(ma, "rank", qp.Int(int64(data.Rank)))
-				qp.MapEntry(ma, "stars", qp.Int(int64(data.NbStars)))
-				qp.MapEntry(ma, "lastMetadataFetch", qp.String(data.LastMetadataFetch.Format(time.RFC3339)))
-
-				lp := cidlink.Link{Cid: *data.Repo}
-				qp.MapEntry(ma, "repo", qp.Link(lp))
-			}))
-		}
-	})
-	if err != nil {
-		return fmt.Errorf("failed to compose the index: %w", err)
-	}
-
 	rawIndex := []byte{}
 	rawIndexBuf := bytes.NewBuffer(rawIndex)
 
-	err = dagjson.Encode(n, rawIndexBuf)
+	err := i.EncodeIndex(index, rawIndexBuf)
 	if err != nil {
 		return fmt.Errorf("failed to encode the index: %w", err)
 	}
@@ -172,6 +154,33 @@ func (i *Indexer) SaveIndex(ctx context.Context, index map[string]metadata.RepoM
 		return fmt.Errorf("failed to publish the new index: %w", err)
 	}
 	log.Println("new index successfully published")
+
+	return nil
+}
+
+func (i *Indexer) EncodeIndex(index map[string]metadata.RepoMetadata, writer io.Writer) error {
+	n, err := qp.BuildMap(basicnode.Prototype.Any, int64(len(index)), func(ma datamodel.MapAssembler) {
+		for name, data := range index {
+			log.Printf("index: %s", name)
+			qp.MapEntry(ma, name, qp.Map(5, func(ma datamodel.MapAssembler) {
+				qp.MapEntry(ma, "url", qp.String(data.RepositoryURL))
+				qp.MapEntry(ma, "rank", qp.Int(int64(data.Rank)))
+				qp.MapEntry(ma, "stars", qp.Int(int64(data.NbStars)))
+				qp.MapEntry(ma, "lastMetadataFetch", qp.String(data.LastMetadataFetch.Format(time.RFC3339)))
+
+				lp := cidlink.Link{Cid: *data.Repo}
+				qp.MapEntry(ma, "repo", qp.Link(lp))
+			}))
+		}
+	})
+	if err != nil {
+		return fmt.Errorf("failed to compose the index: %w", err)
+	}
+
+	err = dagjson.Encode(n, writer)
+	if err != nil {
+		return fmt.Errorf("failed to encode the index: %w", err)
+	}
 
 	return nil
 }

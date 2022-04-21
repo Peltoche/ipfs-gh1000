@@ -15,11 +15,11 @@ import (
 )
 
 type RepoMetadata struct {
-	RepositoryURL     string
-	Rank              int
-	NbStars           int
-	LastMetadataFetch time.Time
-	Repo              *cid.Cid
+	RepositoryURL     string    `json:"url"`
+	Rank              int       `json:"rank"`
+	NbStars           int       `json:"stars"`
+	LastMetadataFetch time.Time `json:"lastMetadataFetch"`
+	Repo              *cid.Cid  `json:"repo"`
 }
 
 type Fetcher struct {
