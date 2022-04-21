@@ -3,12 +3,12 @@ package ipfs
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/Peltoche/ipfs-gh1000/metadata"
+	cid "github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/ipld/go-ipld-prime/codec/dagjson"
 	"github.com/ipld/go-ipld-prime/datamodel"
@@ -55,13 +55,79 @@ func (i *Indexer) RetrieveIndex(ctx context.Context) (map[string]metadata.RepoMe
 		return nil, fmt.Errorf("failed to retrieve the raw index: %w", err)
 	}
 
-	data := map[string]metadata.RepoMetadata{}
-	err = json.NewDecoder(raw).Decode(&data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode the index: %w", err)
+	np := basicnode.Prototype.Any // Pick a stle for the in-memory data.
+	nb := np.NewBuilder()         // Create a builder.
+	dagjson.Decode(nb, raw)       // Hand the builder to decoding -- decoding will fill it in!
+	n := nb.Build()               // Call 'Build' to get the resulting Node.  (It's immutable!)
+
+	it := n.MapIterator()
+
+	res := map[string]metadata.RepoMetadata{}
+
+	for {
+		if it.Done() {
+			break
+		}
+
+		var meta metadata.RepoMetadata
+
+		mapKeyN, mapValueN, err := it.Next()
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode map: %w", err)
+		}
+		metaKey, _ := mapKeyN.AsString()
+
+		it2 := mapValueN.MapIterator()
+
+		for {
+			if it2.Done() {
+				break
+			}
+
+			keyN, valueN, err := it2.Next()
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode map: %w", err)
+			}
+			key, _ := keyN.AsString()
+
+			switch key {
+			case "url":
+				meta.RepositoryURL, err = valueN.AsString()
+			case "rank":
+				var rank int64
+				rank, err = valueN.AsInt()
+				if err == nil {
+					meta.Rank = int(rank)
+				}
+			case "stars":
+				var nbStars int64
+				nbStars, err = valueN.AsInt()
+				if err == nil {
+					meta.NbStars = int(nbStars)
+				}
+			case "lastMetadataFetch":
+				rawDate, err := valueN.AsString()
+				if err == nil {
+					meta.LastMetadataFetch, err = time.Parse(time.RFC3339, rawDate)
+				}
+			case "repo":
+				var c datamodel.Link
+				c, err = valueN.AsLink()
+				if err == nil {
+					var repoCid cid.Cid
+					repoCid, err = cid.Parse(c.String())
+					meta.Repo = &repoCid
+				}
+			}
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse %q fields: %w", key, err)
+			}
+		}
+
+		res[metaKey] = meta
 	}
 
-	return data, nil
+	return res, nil
 }
 
 func (i *Indexer) SaveIndex(ctx context.Context, index map[string]metadata.RepoMetadata) error {

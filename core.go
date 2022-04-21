@@ -9,9 +9,9 @@ import (
 	"github.com/Peltoche/ipfs-gh1000/git"
 	"github.com/Peltoche/ipfs-gh1000/ipfs"
 	"github.com/Peltoche/ipfs-gh1000/metadata"
-	"github.com/go-git/go-billy/memfs"
-	"github.com/go-git/go-git/plumbing/cache"
-	"github.com/go-git/go-git/storage/filesystem"
+	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 )
 
 func Run(
@@ -28,11 +28,6 @@ func Run(
 	links, err := metaFetcher.FetchLinkPage(ctx)
 	if err != nil {
 		log.Fatalf("failed to fetch the first page: %s", err)
-	}
-
-	err = indexer.SaveIndex(ctx, map[string]metadata.RepoMetadata{})
-	if err != nil {
-		panic(err)
 	}
 
 	src := rand.NewSource(time.Now().UnixNano())
@@ -90,6 +85,7 @@ func Run(
 			log.Fatalf("failed to retrieve the index: %s", err)
 		}
 
+		log.Printf("index: %#v\n\n", index)
 		index[link] = *meta
 
 		err = indexer.SaveIndex(ctx, index)
