@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/Peltoche/ipfs-gh1000/git"
-	"github.com/Peltoche/ipfs-gh1000/ipfs"
-	"github.com/Peltoche/ipfs-gh1000/metadata"
+	"github.com/Peltoche/ipfs-gh1000/pkg/git"
+	"github.com/Peltoche/ipfs-gh1000/pkg/ipfs"
+	"github.com/Peltoche/ipfs-gh1000/pkg/metadata"
 	shell "github.com/ipfs/go-ipfs-api"
 )
 

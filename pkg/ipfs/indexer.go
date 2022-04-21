@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Peltoche/ipfs-gh1000/metadata"
+	"github.com/Peltoche/ipfs-gh1000/pkg/metadata"
 	cid "github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/ipld/go-ipld-prime/codec/dagjson"

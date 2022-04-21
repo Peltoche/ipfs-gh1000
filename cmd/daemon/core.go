@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Peltoche/ipfs-gh1000/git"
-	"github.com/Peltoche/ipfs-gh1000/ipfs"
-	"github.com/Peltoche/ipfs-gh1000/metadata"
+	"github.com/Peltoche/ipfs-gh1000/pkg/git"
+	"github.com/Peltoche/ipfs-gh1000/pkg/ipfs"
+	"github.com/Peltoche/ipfs-gh1000/pkg/metadata"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
