@@ -10,6 +10,7 @@ require (
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/ipfs/go-ipfs-files v0.0.9
 	github.com/ipld/go-ipld-prime v0.16.0
+	github.com/teris-io/cli v1.0.1
 	go.uber.org/multierr v1.8.0
 )
 
